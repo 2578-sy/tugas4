@@ -1,25 +1,33 @@
+#include <stdio.h>
 #include <stdlib.h>
-#include "sorting.h"
+#include <string.h>
 
-void bubbleSort(int arr[], int n, SortStats *stats)
+#include "sorting.h"
+#include "fileio.h"
+#include "utils.h"
+
+/*=========================================================
+  BUBBLE SORT
+=========================================================*/
+void bubbleSort(SortStats *s)
 {
     int i, j;
 
-    for(i = 0; i < n - 1; i++)
+    for(i = 0; i < wordCount - 1; i++)
     {
         int swapped = 0;
 
-        for(j = 0; j < n - i - 1; j++)
+        for(j = 0; j < wordCount - i - 1; j++)
         {
-            stats->comparisons++;
+            s->comparisons++;
 
-            if(arr[j] > arr[j + 1])
+            if(strcmp(tempWords[j],
+                      tempWords[j + 1]) > 0)
             {
-                int temp = arr[j];
-                arr[j] = arr[j + 1];
-                arr[j + 1] = temp;
+                swapString(tempWords[j],
+                           tempWords[j + 1]);
 
-                stats->swaps++;
+                s->swaps++;
                 swapped = 1;
             }
         }
@@ -29,79 +37,109 @@ void bubbleSort(int arr[], int n, SortStats *stats)
     }
 }
 
-void selectionSort(int arr[], int n, SortStats *stats)
+/*=========================================================
+  SELECTION SORT
+=========================================================*/
+void selectionSort(SortStats *s)
 {
     int i, j;
 
-    for(i = 0; i < n - 1; i++)
+    for(i = 0; i < wordCount - 1; i++)
     {
-        int minIndex = i;
+        int min = i;
 
-        for(j = i + 1; j < n; j++)
+        for(j = i + 1; j < wordCount; j++)
         {
-            stats->comparisons++;
+            s->comparisons++;
 
-            if(arr[j] < arr[minIndex])
-                minIndex = j;
+            if(strcmp(tempWords[j],
+                      tempWords[min]) < 0)
+            {
+                min = j;
+            }
         }
 
-        if(minIndex != i)
+        if(min != i)
         {
-            int temp = arr[i];
-            arr[i] = arr[minIndex];
-            arr[minIndex] = temp;
+            swapString(tempWords[i],
+                       tempWords[min]);
 
-            stats->swaps++;
+            s->swaps++;
         }
     }
 }
 
-void insertionSort(int arr[], int n, SortStats *stats)
+/*=========================================================
+  INSERTION SORT
+=========================================================*/
+void insertionSort(SortStats *s)
 {
     int i;
 
-    for(i = 1; i < n; i++)
+    for(i = 1; i < wordCount; i++)
     {
-        int key = arr[i];
+        char key[MAX_LENGTH];
+
+        strcpy(key, tempWords[i]);
+
         int j = i - 1;
 
         while(j >= 0)
         {
-            stats->comparisons++;
+            s->comparisons++;
 
-            if(arr[j] > key)
+            if(strcmp(tempWords[j], key) > 0)
             {
-                arr[j + 1] = arr[j];
-                stats->swaps++;
+                strcpy(tempWords[j + 1],
+                       tempWords[j]);
+
+                s->swaps++;
                 j--;
             }
             else
+            {
                 break;
+            }
         }
 
-        arr[j + 1] = key;
+        strcpy(tempWords[j + 1], key);
     }
 }
 
-void merge(int arr[],
-           int left,
-           int mid,
-           int right,
-           SortStats *stats)
+/*=========================================================
+  MERGE SORT
+=========================================================*/
+static void merge(int left,
+                  int mid,
+                  int right,
+                  SortStats *s)
 {
     int n1 = mid - left + 1;
     int n2 = right - mid;
 
-    int *L = (int *)malloc(n1 * sizeof(int));
-    int *R = (int *)malloc(n2 * sizeof(int));
+    char (*L)[MAX_LENGTH] =
+        malloc(n1 * sizeof(*L));
+
+    char (*R)[MAX_LENGTH] =
+        malloc(n2 * sizeof(*R));
+
+    if(L == NULL || R == NULL)
+    {
+        printf("Gagal mengalokasikan memori.\n");
+
+        free(L);
+        free(R);
+
+        exit(1);
+    }
 
     int i, j, k;
 
     for(i = 0; i < n1; i++)
-        L[i] = arr[left + i];
+        strcpy(L[i], tempWords[left + i]);
 
     for(i = 0; i < n2; i++)
-        R[i] = arr[mid + 1 + i];
+        strcpy(R[i], tempWords[mid + 1 + i]);
 
     i = 0;
     j = 0;
@@ -109,150 +147,130 @@ void merge(int arr[],
 
     while(i < n1 && j < n2)
     {
-        stats->comparisons++;
+        s->comparisons++;
 
-        if(L[i] <= R[j])
+        if(strcmp(L[i], R[j]) <= 0)
         {
-            arr[k] = L[i];
+            strcpy(tempWords[k], L[i]);
             i++;
         }
         else
         {
-            arr[k] = R[j];
+            strcpy(tempWords[k], R[j]);
             j++;
         }
 
-        stats->swaps++;
+        s->swaps++;
         k++;
     }
 
     while(i < n1)
     {
-        arr[k] = L[i];
+        strcpy(tempWords[k], L[i]);
+
         i++;
         k++;
 
-        stats->swaps++;
+        s->swaps++;
     }
 
     while(j < n2)
     {
-        arr[k] = R[j];
+        strcpy(tempWords[k], R[j]);
+
         j++;
         k++;
 
-        stats->swaps++;
+        s->swaps++;
     }
 
     free(L);
     free(R);
 }
 
-void mergeSortRec(int arr[],
-                  int left,
-                  int right,
-                  SortStats *stats)
+static void mergeSortRec(int left,
+                         int right,
+                         SortStats *s)
 {
     if(left < right)
     {
         int mid = left + (right - left) / 2;
 
-        mergeSortRec(arr,
-                     left,
-                     mid,
-                     stats);
+        mergeSortRec(left, mid, s);
+        mergeSortRec(mid + 1, right, s);
 
-        mergeSortRec(arr,
-                     mid + 1,
-                     right,
-                     stats);
-
-        merge(arr,
-              left,
-              mid,
-              right,
-              stats);
+        merge(left, mid, right, s);
     }
 }
 
-void mergeSort(int arr[],
-               int n,
-               SortStats *stats)
+void mergeSort(SortStats *s)
 {
-    mergeSortRec(arr,
-                 0,
-                 n - 1,
-                 stats);
+    mergeSortRec(0,
+                 wordCount - 1,
+                 s);
 }
 
-int partitionQS(int arr[],
-                int low,
-                int high,
-                SortStats *stats)
+/*=========================================================
+  QUICK SORT
+=========================================================*/
+static int partitionQS(int low,
+                       int high,
+                       SortStats *s)
 {
-    int pivot = arr[high];
+    char pivot[MAX_LENGTH];
+
+    strcpy(pivot, tempWords[high]);
 
     int i = low - 1;
     int j;
 
     for(j = low; j < high; j++)
     {
-        stats->comparisons++;
+        s->comparisons++;
 
-        if(arr[j] < pivot)
+        if(strcmp(tempWords[j], pivot) < 0)
         {
             i++;
 
-            int temp = arr[i];
-            arr[i] = arr[j];
-            arr[j] = temp;
+            swapString(tempWords[i],
+                       tempWords[j]);
 
-            stats->swaps++;
+            s->swaps++;
         }
     }
 
-    {
-        int temp = arr[i + 1];
-        arr[i + 1] = arr[high];
-        arr[high] = temp;
+    swapString(tempWords[i + 1],
+               tempWords[high]);
 
-        stats->swaps++;
-    }
+    s->swaps++;
 
     return i + 1;
 }
 
-void quickSortRec(int arr[],
-                  int low,
-                  int high,
-                  SortStats *stats)
+static void quickSortRec(int low,
+                         int high,
+                         SortStats *s)
 {
     if(low < high)
     {
         int pi =
-            partitionQS(arr,
-                        low,
+            partitionQS(low,
                         high,
-                        stats);
+                        s);
 
-        quickSortRec(arr,
-                     low,
+        quickSortRec(low,
                      pi - 1,
-                     stats);
+                     s);
 
-        quickSortRec(arr,
-                     pi + 1,
+        quickSortRec(pi + 1,
                      high,
-                     stats);
+                     s);
     }
 }
 
-void quickSort(int arr[],
-               int n,
-               SortStats *stats)
+void quickSort(SortStats *s)
 {
-    quickSortRec(arr,
-                 0,
-                 n - 1,
-                 stats);
+    quickSortRec(0,
+                 wordCount - 1,
+                 s);
 }
