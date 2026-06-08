@@ -1,46 +1,53 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
+
+#include "fileio.h"
 #include "utils.h"
 
-void generateRandom(int arr[], int n)
+void copyWords(void)
 {
     int i;
 
-    for(i = 0; i < n; i++)
-        arr[i] = rand();
+    for(i=0;i<wordCount;i++)
+        strcpy(tempWords[i],words[i]);
 }
 
-void copyArray(int source[], int destination[], int n)
+void swapString(char a[],
+                char b[])
 {
-    int i;
+    char temp[MAX_LENGTH];
 
-    for(i = 0; i < n; i++)
-        destination[i] = source[i];
+    strcpy(temp,a);
+    strcpy(a,b);
+    strcpy(b,temp);
 }
 
-void printArray(int arr[], int n)
+void printWords(void)
 {
     int i;
 
-    if(n <= 100)
+    if(wordCount <= 100)
     {
-        for(i = 0; i < n; i++)
-            printf("%d ", arr[i]);
-
-        printf("\n");
+        for(i=0;i<wordCount;i++)
+            printf("%s\n",
+                   tempWords[i]);
     }
     else
     {
-        printf("10 data pertama:\n");
+        printf("\n10 kata pertama:\n");
 
-        for(i = 0; i < 10; i++)
-            printf("%d ", arr[i]);
+        for(i=0;i<10;i++)
+            printf("%s\n",
+                   tempWords[i]);
 
-        printf("\n10 data terakhir:\n");
+        printf("\n10 kata terakhir:\n");
 
-        for(i = n - 10; i < n; i++)
-            printf("%d ", arr[i]);
-
-        printf("\n");
+        for(i=wordCount-10;
+            i<wordCount;
+            i++)
+        {
+            printf("%s\n",
+                   tempWords[i]);
+        }
     }
 }
