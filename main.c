@@ -2,144 +2,115 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "fileio.h"
 #include "sorting.h"
 #include "utils.h"
 
-void runSort(int original[],
-             int n,
-             int choice)
+/*=========================================================
+  Menjalankan satu metode sorting
+=========================================================*/
+void runSort(int choice)
 {
-    int *arr =
-        (int*)malloc(n * sizeof(int));
+    copyWords();
 
-    copyArray(original, arr, n);
-
-    SortStats stats = {0, 0};
+    SortStats s = {0, 0, 0};
 
     clock_t start = clock();
 
     switch(choice)
     {
         case 1:
-            insertionSort(arr, n, &stats);
+            insertionSort(&s);
             break;
 
         case 2:
-            bubbleSort(arr, n, &stats);
+            bubbleSort(&s);
             break;
 
         case 3:
-            selectionSort(arr, n, &stats);
+            selectionSort(&s);
             break;
 
         case 4:
-            mergeSort(arr, n, &stats);
+            mergeSort(&s);
             break;
 
         case 5:
-            quickSort(arr, n, &stats);
+            quickSort(&s);
             break;
     }
 
     clock_t end = clock();
 
-    double elapsed =
+    s.timeUsed =
         (double)(end - start)
         / CLOCKS_PER_SEC;
 
-    printArray(arr, n);
+    printWords();
 
     printf("\nPerbandingan : %lld\n",
-           stats.comparisons);
+           s.comparisons);
 
     printf("Pertukaran   : %lld\n",
-           stats.swaps);
+           s.swaps);
 
     printf("Waktu        : %.6f detik\n",
-           elapsed);
-
-    free(arr);
+           s.timeUsed);
 }
 
-int main()
+/*=========================================================
+  Membandingkan seluruh metode sorting
+=========================================================*/
+void compareAll(void)
 {
-    srand(time(NULL));
+    SortStats result[5];
 
-    int n;
-    int pilihan;
+    int i;
 
-    printf("Masukkan Jumlah Bilangan (n): ");
-    scanf("%d", &n);
-
-    int *data =
-        (int*)malloc(n * sizeof(int));
-
-    generateRandom(data, n);
-
-    printf("Random data selesai\n");
-
-    do
+    for(i = 0; i < 5; i++)
     {
-        printf("\n");
-printf("1. INSERTION SORT\n");
-printf("2. BUBBLE SORT\n");
-printf("3. SELECTION SORT\n");
-printf("4. MERGE SORT\n");
-printf("5. QUICK SORT\n");
-printf("6. BANDINGKAN SEMUA METODE\n");
-printf("7. RANDOM ULANG DATA\n");
-printf("8. SELESAI\n");
+        result[i].comparisons = 0;
+        result[i].swaps = 0;
+        result[i].timeUsed = 0;
+    }
 
-printf("Pilihan: ");
-scanf("%d", &pilihan);
+    for(i = 1; i <= 5; i++)
+    {
+        copyWords();
 
-switch(pilihan)
-{
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-        runSort(data, n, pilihan);
-        break;
+        clock_t start = clock();
 
-    case 6:
-        compareAllSorts(data, n);
-        break;
+        switch(i)
+        {
+            case 1:
+                insertionSort(&result[i - 1]);
+                break;
 
-    case 7:
+            case 2:
+                bubbleSort(&result[i - 1]);
+                break;
 
-        free(data);
+            case 3:
+                selectionSort(&result[i - 1]);
+                break;
 
-        printf("Masukkan Jumlah Bilangan (n): ");
-        scanf("%d", &n);
+            case 4:
+                mergeSort(&result[i - 1]);
+                break;
 
-        data =
-            (int *)malloc(n * sizeof(int));
+            case 5:
+                quickSort(&result[i - 1]);
+                break;
+        }
 
-        generateRandom(data, n);
+        clock_t end = clock();
 
-        printf("Random ulang selesai.\n");
-        break;
+        result[i - 1].timeUsed =
+            (double)(end - start)
+            / CLOCKS_PER_SEC;
+    }
 
-    case 8:
-        printf("Program selesai.\n");
-        break;
-
-    default:
-        printf("Pilihan tidak valid.\n");
-}
-
-    while(pilihan != 8);
-
-    free(data);
-
-    return 0;
-}
-
-void compareAllSorts(int original[], int n)
-{
-    const char *names[5] =
+    const char *name[5] =
     {
         "Insertion",
         "Bubble",
@@ -148,64 +119,89 @@ void compareAllSorts(int original[], int n)
         "Quick"
     };
 
-    int method;
-
     printf("\n==============================================================\n");
     printf("%-12s %-15s %-15s %-10s\n",
            "METODE",
            "COMPARE",
            "SWAP",
-           "WAKTU(s)");
+           "WAKTU");
+
     printf("==============================================================\n");
 
-    for(method = 1; method <= 5; method++)
+    for(i = 0; i < 5; i++)
     {
-        int *arr =
-            (int *)malloc(n * sizeof(int));
-
-        copyArray(original, arr, n);
-
-        SortStats stats = {0, 0};
-
-        clock_t start = clock();
-
-        switch(method)
-        {
-            case 1:
-                insertionSort(arr, n, &stats);
-                break;
-
-            case 2:
-                bubbleSort(arr, n, &stats);
-                break;
-
-            case 3:
-                selectionSort(arr, n, &stats);
-                break;
-
-            case 4:
-                mergeSort(arr, n, &stats);
-                break;
-
-            case 5:
-                quickSort(arr, n, &stats);
-                break;
-        }
-
-        clock_t end = clock();
-
-        double elapsed =
-            (double)(end - start)
-            / CLOCKS_PER_SEC;
-
         printf("%-12s %-15lld %-15lld %.6f\n",
-               names[method - 1],
-               stats.comparisons,
-               stats.swaps,
-               elapsed);
-
-        free(arr);
+               name[i],
+               result[i].comparisons,
+               result[i].swaps,
+               result[i].timeUsed);
     }
 
     printf("==============================================================\n");
+}
+
+/*=========================================================
+  Main Program
+=========================================================*/
+int main(void)
+{
+    char filename[256];
+    int menu;
+
+    printf("Masukkan nama file: ");
+    scanf("%255s", filename);
+
+    if(loadFile(filename) == 0)
+    {
+        return 1;
+    }
+
+    if(wordCount == 0)
+    {
+        printf("File kosong.\n");
+        return 1;
+    }
+
+    printf("Jumlah kata dibaca: %d\n",
+           wordCount);
+
+    do
+    {
+        printf("\n");
+        printf("1. INSERTION SORT\n");
+        printf("2. BUBBLE SORT\n");
+        printf("3. SELECTION SORT\n");
+        printf("4. MERGE SORT\n");
+        printf("5. QUICK SORT\n");
+        printf("6. BANDINGKAN SEMUA METODE\n");
+        printf("7. SELESAI\n");
+
+        printf("Pilihan: ");
+        scanf("%d", &menu);
+
+        switch(menu)
+        {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+                runSort(menu);
+                break;
+
+            case 6:
+                compareAll();
+                break;
+
+            case 7:
+                printf("Program selesai.\n");
+                break;
+
+            default:
+                printf("Pilihan tidak valid.\n");
+        }
+
+    } while(menu != 7);
+
+    return 0;
 }
