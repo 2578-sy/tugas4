@@ -1,8 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-void generateRandom(int arr[], int n);
-void printArray(int arr[], int n);
-void copyArray(int source[], int destination[], int n);
+void copyWords(void);
+void swapString(char a[], char b[]);
+void printWords(void);
 
 #endif
